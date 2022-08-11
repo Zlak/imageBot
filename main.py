@@ -24,7 +24,7 @@ def process_file(filename, update: Update, context: CallbackContext):
     img = img.resize((TO_WIDTH, temp_height))
 
     for i in range(VAR_NUM):
-        img1 = img.crop((0, 0 + height_step * i, TO_WIDTH - 1, TO_HEIGHT - 1 + height_step * i))
+        img1 = img.crop((0, 0 + height_step * i, TO_WIDTH, TO_HEIGHT + height_step * i))
         bio = BytesIO()
         bio.name = 'image.jpeg'
         img1.save(bio, 'JPEG')
@@ -47,7 +47,12 @@ def photo_handler(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     context.bot.send_message(chat_id=chat_id,
                              text=f"trying to make magic")
-    file = update.message.photo[-1].file_id
+    #
+
+    if isinstance(update.message.effective_attachment,list):
+        file = update.message.effective_attachment[-1].file_id
+    else:
+        file = update.message.effective_attachment.file_id
     #file_ext = pathlib.Path(update.message.photo[-1].file_path).suffix
     file_ext = '.jpeg'
     obj = context.bot.get_file(file)
@@ -91,6 +96,7 @@ def main():
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('help', help))
     dp.add_handler(CommandHandler('settings', settings))
+    dp.add_handler(MessageHandler(Filters.document.category('image/'), photo_handler))
     dp.add_handler(MessageHandler(Filters.photo, photo_handler))
 
     echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
